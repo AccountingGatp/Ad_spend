@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ad Spend Journal</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f6fa; --surface: #fff; --text: #1a1c2e; --muted: #6b7194;
+      --border: #e0e3ee; --blue: #2e5090; --blue-light: #e8edf7;
+      --green: #0f8a5f; --green-light: #eaf7f1; --red: #c03030;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1120; --surface: #191c2e; --text: #e2e4f0; --muted: #8a8eb0;
+        --border: #282b42; --blue: #6b8fd4; --blue-light: #1c2340;
+        --green: #34c88a; --green-light: #12291f; --red: #e05555;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5; padding: 0 16px;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 32px 0 60px; }
+    h1 { font-size: 24px; font-weight: 700; }
+    h1 .accent { color: var(--blue); }
+    .subtitle { color: var(--muted); font-size: 14px; margin: 4px 0 24px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .field input {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      font-size: 15px; color: var(--text); outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+    .field input:focus { border-color: var(--blue); }
+    .field .prefix {
+      position: relative;
+    }
+    .field .prefix input { padding-left: 28px; width: 100%; }
+    .field .prefix::before {
+      content: "$"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 15px; pointer-events: none;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 12px 24px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+    }
+    .btn-blue { background: var(--blue); color: #fff; }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+    /* Table */
+    .journal-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      margin-top: 12px; font-variant-numeric: tabular-nums;
+    }
+    .journal-table th {
+      text-align: left; font-weight: 600; padding: 8px 10px;
+      border-bottom: 2px solid var(--border); color: var(--muted);
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .journal-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .dr { color: var(--green); font-weight: 600; }
+    .cr { color: var(--red); font-weight: 600; }
+    .total-row td { font-weight: 700; border-top: 2px solid var(--border); border-bottom: none; }
+
+    .narration-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      font-size: 13px; color: var(--muted);
+    }
+    .narration-box strong { color: var(--text); }
+
+    @media (max-width: 500px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><span class="accent">Ad Spend</span> Journal</h1>
+    <p class="subtitle">Enter ad spend amounts &rarr; preview Xero journal &rarr; download Excel</p>
+
+    <!-- Input -->
+    <div class="card">
+      <div class="card-title">Enter Ad Spend</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="dateInput" />
+        </div>
+        <div></div>
+
+        <div class="field">
+          <label>Facebook / Meta Ads</label>
+          <div class="prefix"><input type="number" id="fbAmt" step="0.01" min="0" placeholder="0.00" /></div>
+        </div>
+        <div class="field">
+          <label>Google Ads</label>
+          <div class="prefix"><input type="number" id="gAmt" step="0.01" min="0" placeholder="0.00" /></div>
+        </div>
+        <div class="field">
+          <label>Snapchat Ads</label>
+          <div class="prefix"><input type="number" id="snapAmt" step="0.01" min="0" placeholder="0.00" /></div>
+        </div>
+        <div class="field">
+          <label>TikTok Ads</label>
+          <div class="prefix"><input type="number" id="ttAmt" step="0.01" min="0" placeholder="0.00" /></div>
+        </div>
+        <div class="field">
+          <label>Pinterest Ads</label>
+          <div class="prefix"><input type="number" id="pinAmt" step="0.01" min="0" placeholder="0.00" /></div>
+        </div>
+
+        <div class="full">
+          <button class="btn btn-blue" onclick="generate()">Generate Journal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="previewCard" class="card" style="display:none">
+      <div class="card-title">Journal Preview</div>
+      <div id="narration" class="narration-box"></div>
+      <div style="overflow-x:auto">
+        <table class="journal-table">
+          <thead>
+            <tr><th>Description</th><th>Account</th><th>Tax Rate</th><th style="text-align:right">Amount</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="btn btn-green" onclick="downloadExcel()">Download Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Default date to yesterday
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    document.getElementById("dateInput").value = d.toISOString().slice(0, 10);
+
+    const ACCOUNTS = {
+      facebook: {
+        description: "facebooks Ads",
+        expense: "263 - Social Media Ads - Meta",
+        accrual: "402 - Accrued Social Media Ads - Meta",
+      },
+      google: {
+        description: "Google Ads",
+        expense: "271 - Social Media Ads - Google",
+        accrual: "405 - Accrued Social Media Ads - Google",
+      },
+      others: {
+        description: "Sanpchat, Tiktok, Pinterest",
+        expense: "264 - Social Media Ads - Other",
+        accrual: "406 - Accrued Social Media Ads - Other",
+      },
+    };
+    const TAX = "BAS Excluded";
+
+    let lines = [];
+
+    function fmt(n) {
+      return Math.abs(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function dotDate(s) {
+      const [y, m, dd] = s.split("-");
+      return dd + "." + m + "." + y;
+    }
+
+    function generate() {
+      const dateStr = document.getElementById("dateInput").value;
+      if (!dateStr) { alert("Pick a date"); return; }
+
+      const fb   = parseFloat(document.getElementById("fbAmt").value) || 0;
+      const goog = parseFloat(document.getElementById("gAmt").value) || 0;
+      const snap = parseFloat(document.getElementById("snapAmt").value) || 0;
+      const tt   = parseFloat(document.getElementById("ttAmt").value) || 0;
+      const pin  = parseFloat(document.getElementById("pinAmt").value) || 0;
+
+      const amounts = {
+        facebook: fb,
+        google:   goog,
+        others:   Math.round((snap + tt + pin) * 100) / 100,
+      };
+
+      lines = [];
+      for (const [key, cfg] of Object.entries(ACCOUNTS)) {
+        const amt = Math.round(amounts[key] * 100) / 100;
+        if (amt <= 0) continue;
+        lines.push({ desc: cfg.description, acct: cfg.expense,  amt:  amt, type: "Dr" });
+        lines.push({ desc: cfg.description, acct: cfg.accrual,  amt: -amt, type: "Cr" });
+      }
+
+      if (lines.length === 0) { alert("Enter at least one amount"); return; }
+
+      const narration = "Advertisemnet as per Triple Whale for " + dotDate(dateStr);
+      document.getElementById("narration").innerHTML =
+        "<strong>Narration:</strong> " + narration +
+        "<br><strong>Date:</strong> " + dotDate(dateStr) +
+        "<br><strong>Tax:</strong> Amounts do not include Tax &mdash; " + TAX;
+
+      const totalDr = lines.filter(l => l.amt > 0).reduce((s, l) => s + l.amt, 0);
+      let html = lines.map(l =>
+        "<tr><td>" + l.desc + "</td><td>" + l.acct + "</td><td>" + TAX + "</td>" +
+        '<td style="text-align:right" class="' + (l.type === "Dr" ? "dr" : "cr") + '">' +
+        (l.amt >= 0 ? "" : "-") + "$" + fmt(l.amt) + "</td></tr>"
+      ).join("");
+      html += '<tr class="total-row"><td colspan="3" style="text-align:right">Total Debit / (Credit)</td>' +
+        '<td style="text-align:right">$' + fmt(totalDr) + " / (-$" + fmt(totalDr) + ")</td></tr>";
+
+      document.getElementById("tbody").innerHTML = html;
+      document.getElementById("previewCard").style.display = "";
+    }
+
+    function downloadExcel() {
+      const dateStr = document.getElementById("dateInput").value;
+      const narration = "Advertisemnet as per Triple Whale for " + dotDate(dateStr);
+
+      const rows = lines.map(l => ({
+        "Narration": narration,
+        "Date": dotDate(dateStr),
+        "Description": l.desc,
+        "Account": l.acct,
+        "Tax Rate": TAX,
+        "Amount": l.amt,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws["!cols"] = [{ wch: 42 }, { wch: 12 }, { wch: 30 }, { wch: 40 }, { wch: 14 }, { wch: 14 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Journal");
+      XLSX.writeFile(wb, "ad_spend_journal_" + dateStr.replace(/-/g, "") + ".xlsx");
+    }
+  </script>
+</body>
+</html>
