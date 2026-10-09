@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Ad Spend Journal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,7 +65,7 @@
   .pastebox { display: flex; align-items: flex-start; gap: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--field); overflow: hidden; }
   .rowlabels { flex: none; width: 92px; padding-top: 10px; border-right: 1px solid var(--line); background: var(--surface); }
   .rowlabels span { display: block; height: 24px; line-height: 24px; padding-inline: 10px; font-size: 13px; font-weight: 500; }
-  textarea { flex: 1; min-width: 0; height: 140px; resize: vertical; border: 0; border-radius: 0; font-family: var(--mono); font-size: 13px; line-height: 24px; color: var(--ink); background: transparent; padding: 10px 12px; white-space: pre; overflow: auto; }
+  textarea { flex: 1; min-width: 0; height: 164px; resize: vertical; border: 0; border-radius: 0; font-family: var(--mono); font-size: 13px; line-height: 24px; color: var(--ink); background: transparent; padding: 10px 12px; white-space: pre; overflow: auto; }
   textarea:focus-visible { outline-offset: -2px; }
   textarea::placeholder { color: var(--muted); opacity: .8; }
   .count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -143,13 +142,13 @@
   <section class="card" aria-labelledby="h-paste">
     <div class="head">
       <h2 id="h-paste"><span class="step">2</span>Paste spend</h2>
-      <span class="links"><button class="link" id="example" type="button">Fill with the 02 Sep example</button><button class="link" id="clear" type="button">Clear</button></span>
+      <button class="link" id="clear" type="button">Clear</button>
     </div>
-    <p class="hint">Paste five rows, one column per date, values only. The rows must be in the order shown on the left. Leave out the row names and the date row.</p>
+    <p class="hint">Paste six rows, one column per date, values only. The rows must be in the order shown on the left. Leave out the row names and the date row.</p>
     <label for="paste" class="count" id="count">Paste below</label>
     <div class="pastebox">
-      <div class="rowlabels" aria-hidden="true"><span>Meta</span><span>Google</span><span>Pinterest</span><span>Snap</span><span>TikTok</span></div>
-      <textarea id="paste" spellcheck="false" wrap="off" autocomplete="off" placeholder="13237.79&#9;13300.10&#9;...&#10;1932.48&#9;1800.00&#9;...&#10;212.81&#9;...&#10;739.81&#9;...&#10;80.08&#9;..."></textarea>
+      <div class="rowlabels" aria-hidden="true"><span>Meta</span><span>Google</span><span>Pinterest</span><span>Applovin</span><span>Snap</span><span>TikTok</span></div>
+      <textarea id="paste" spellcheck="false" wrap="off" autocomplete="off" placeholder="13237.79&#9;13300.10&#9;...&#10;1932.48&#9;1800.00&#9;...&#10;212.81&#9;...&#10;60.79&#9;...&#10;739.81&#9;...&#10;80.08&#9;..."></textarea>
     </div>
   </section>
 
@@ -165,7 +164,7 @@
     <div class="exports">
       <div class="panel">
         <h3>Saint Daily CSV</h3>
-        <p class="hint">Date, Meta, Google, Pinterest, Snap, TikTok. Import this into the Saint Daily ad spend table.</p>
+        <p class="hint">Date, Meta, Google, Pinterest, Applovin, Snap, TikTok. Import this into the Saint Daily ad spend table.</p>
         <div class="btns"><button class="btn" id="dlDaily" type="button" disabled>Download CSV</button></div>
         <p class="status" id="stDaily" aria-live="polite"></p>
       </div>
@@ -189,6 +188,7 @@ const PLATFORMS = [
   { key: "meta",      label: "Meta",      desc: "facebooksAds", expCode: "263", expName: "Social Media Ads - Meta",      accCode: "402", accName: "Accrued Social Media Ads - Meta",      gst: false },
   { key: "google",    label: "Google",    desc: "Google Ads",   expCode: "271", expName: "Social Media Ads - Google",    accCode: "405", accName: "Accrued Social Media Ads - Google",    gst: true  },
   { key: "pinterest", label: "Pinterest", desc: "Pinterest",    expCode: "318", expName: "Social Media Ads - Pinterest", accCode: "398", accName: "Accrued Social Media Ads - Pinterest", gst: false },
+  { key: "applovin",  label: "Applovin",  desc: "Applovin",     expCode: "314", expName: "Social Media Ads - AppLovin",  accCode: "396", accName: "Accrued Social Media Ads - AppLovin",  gst: true  },
   { key: "snap",      label: "Snap",      desc: "Snapchat",     expCode: "299", expName: "Social Media Ads - Snapchat",  accCode: "399", accName: "Accrued Social Media Ads - Snapchat",  gst: true  },
   { key: "tiktok",    label: "TikTok",    desc: "Tiktok",       expCode: "319", expName: "Social Media Ads - TikTok",    accCode: "397", accName: "Accrued Social Media Ads - TikTok",    gst: true  },
 ];
@@ -244,7 +244,7 @@ function analyze(days, text) {
   let rows = lines.map(l => l.split("\t"));
   const errors = [], warnings = [];
   const n = days.length, P = PLATFORMS.length;
-  const nameRe = /^\s*(meta|facebook|google|pinterest|snap|snapchat|tiktok|tik tok|total|date)\b/i;
+  const nameRe = /^\s*(meta|facebook|google|pinterest|applovin|snap|snapchat|tiktok|tik tok|total|date)\b/i;
 
   // row names copied along with the numbers
   if (rows.filter(r => nameRe.test(r[0] || "")).length >= Math.min(2, rows.length)) {
@@ -288,11 +288,11 @@ function analyze(days, text) {
     if (rows.length < P) {
       errors.push({ title: "Pasted " + plural(rows.length, "row") + ", expected " + P,
         why: "Missing: " + PLATFORMS.slice(rows.length).map(p => p.label).join(", ") + ".",
-        fix: "Select all five rows (" + names + ") in the sheet before copying." });
+        fix: "Select all " + P + " rows (" + names + ") in the sheet before copying." });
     } else {
       errors.push({ title: "Pasted " + plural(rows.length, "row") + ", expected " + P,
         why: plural(rows.length - P, "extra row") + " below TikTok.",
-        fix: "Copy only the five spend rows. Leave out totals or other rows underneath." });
+        fix: "Copy only the " + P + " spend rows. Leave out totals or other rows underneath." });
     }
   }
 
@@ -323,7 +323,7 @@ function analyze(days, text) {
 
   grid.forEach(g => {
     if (!g.extra && g.cells.every(c => c.status === "ok" && c.cents === 0)) {
-      warnings.push({ title: "All five values are 0 on " + lbl(g.day), why: "No journal will be created for this date.",
+      warnings.push({ title: "All values are 0 on " + lbl(g.day), why: "No journal will be created for this date.",
         fix: "If that is wrong, fix the sheet and paste again." });
     }
   });
@@ -361,7 +361,7 @@ function csvEsc(v) { const s = String(v); return /[",\n]/.test(s) ? '"' + s.repl
 const csvJoin = rows => rows.map(r => r.map(csvEsc).join(",")).join("\r\n") + "\r\n";
 
 function dailyCsv(days, grid) {
-  const rows = [["Date", "Meta", "Google", "Pinterest", "Snap", "TikTok"]];
+  const rows = [["Date"].concat(PLATFORMS.map(p => p.label))];
   grid.forEach((g, i) => { if (!g.extra) rows.push([iso(days[i])].concat(g.cells.map(c => plain(c.cents)))); });
   return csvJoin(rows);
 }
@@ -451,19 +451,19 @@ function refresh(manual) {
     current = { days: null, res: null, journals: [] };
   } else {
     const days = built.days;
-    $("rangeNote").innerHTML = "<strong>" + plural(days.length, "day") + "</strong> &middot; " + lbl(days[0]) + " to " + lbl(days[days.length - 1]) + ". Paste 5 rows by " + plural(days.length, "column") + ".";
+    $("rangeNote").innerHTML = "<strong>" + plural(days.length, "day") + "</strong> &middot; " + lbl(days[0]) + " to " + lbl(days[days.length - 1]) + ". Paste " + PLATFORMS.length + " rows by " + plural(days.length, "column") + ".";
     res = analyze(days, text);
     if (res.empty) {
-      $("count").textContent = "Expected: 5 rows by " + plural(days.length, "column");
+      $("count").textContent = "Expected: " + PLATFORMS.length + " rows by " + plural(days.length, "column");
       banner.className = "banner idle"; banner.textContent = "Waiting for pasted data.";
       issues.innerHTML = ""; wrap.hidden = true;
     } else {
-      $("count").textContent = "Pasted " + res.rows + " rows by " + plural(res.cols, "column") + ". Expected 5 rows by " + plural(days.length, "column") + ".";
+      $("count").textContent = "Pasted " + res.rows + " rows by " + plural(res.cols, "column") + ". Expected " + PLATFORMS.length + " rows by " + plural(days.length, "column") + ".";
       ok = res.ok;
       if (ok) {
         journals = buildJournals(days, res.grid);
         banner.className = "banner good";
-        banner.textContent = "All good. " + plural(days.length, "day") + ", " + (days.length * 5) + " values checked.";
+        banner.textContent = "All good. " + plural(days.length, "day") + ", " + (days.length * PLATFORMS.length) + " values checked.";
       } else {
         banner.className = "banner bad";
         banner.textContent = plural(res.errors.length, "problem") + " to fix before you can export.";
@@ -516,17 +516,9 @@ $("paste").addEventListener("paste", e => {
 });
 $("recheck").addEventListener("click", () => refresh(true));
 $("clear").addEventListener("click", () => { $("paste").value = ""; refresh(); $("paste").focus(); });
-$("example").addEventListener("click", () => {
-  $("start").value = "2026-09-02"; $("end").value = "2026-09-02";
-  $("paste").value = "13237.79\n1932.48\n212.81\n739.81\n80.08";
-  refresh();
-});
-
 (function init() {
   const t = new Date(); const y = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) / 86400000 - 1;
   $("end").value = iso(y); $("start").value = iso(y - 6);
   refresh();
 })();
 </script>
-
-</body></html>
